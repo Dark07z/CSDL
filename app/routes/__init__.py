@@ -42,7 +42,11 @@ def them_sach():
             so_luong = int(request.form.get('so_luong') or 0)
             ma_tl = request.form.get('ma_tl')
             ma_ncc = request.form.get('ma_ncc')
-            
+            # Kiểm tra trùng mã sách trước khi thêm để tránh UNIQUE constraint
+            if ma_sach and db.session.get(Sach, ma_sach):
+                flash(f'Mã sách "{ma_sach}" đã tồn tại. Vui lòng chọn mã khác.', 'danger')
+                return redirect(url_for('main.danh_sach_sach'))
+
             sach_moi = Sach(
                 ma_sach=ma_sach,
                 ten_sach=ten_sach,
@@ -53,9 +57,25 @@ def them_sach():
                 ma_tl=ma_tl,
                 ma_ncc=ma_ncc
             )
-            
             db.session.add(sach_moi)
             db.session.commit()
+
+            # Sau khi sach_moi đã commit, tạo bản sao (BanSao) tương ứng với số lượng nếu có chi nhánh
+            try:
+                default_branch = db.session.query(ChiNhanh).first()
+                if default_branch and so_luong > 0:
+                    for i in range(so_luong):
+                        ma_bs = f"{ma_sach}-BS{str(i+1).zfill(3)}"
+                        ban_sao = BanSao(
+                            ma_ban_sao=ma_bs,
+                            ma_sach=ma_sach,
+                            ma_chi_nhanh=default_branch.ma_chi_nhanh,
+                            ngay_nhap=datetime.now().date()
+                        )
+                        db.session.add(ban_sao)
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()
             flash(f'Thêm sách "{ten_sach}" thành công!', 'success')
             return redirect(url_for('main.danh_sach_sach'))
         except Exception as e:
@@ -84,6 +104,24 @@ def sua_sach(ma_sach):
             sach.ma_tl = request.form.get('ma_tl')
             sach.ma_ncc = request.form.get('ma_ncc')
             
+            # Nếu tăng số lượng, tạo thêm bản sao tương ứng
+            try:
+                existing_count = db.session.query(BanSao).filter_by(ma_sach=sach.ma_sach).count()
+                if sach.so_luong > existing_count:
+                    default_branch = db.session.query(ChiNhanh).first()
+                    if default_branch:
+                        for i in range(existing_count, sach.so_luong):
+                            ma_bs = f"{sach.ma_sach}-BS{str(i+1).zfill(3)}"
+                            ban_sao = BanSao(
+                                ma_ban_sao=ma_bs,
+                                ma_sach=sach.ma_sach,
+                                ma_chi_nhanh=default_branch.ma_chi_nhanh,
+                                ngay_nhap=datetime.now().date()
+                            )
+                            db.session.add(ban_sao)
+            except Exception:
+                pass
+
             db.session.commit()
             flash('Cập nhật sách thành công!', 'success')
             return redirect(url_for('main.danh_sach_sach'))
