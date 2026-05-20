@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách thành viên{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-users"></i> Quản lý thành viên</h1>
+    <p>Danh sách tất cả thành viên thư viện</p>
+</div>
+
+<div class="toolbar">
+    <a href="{{ url_for('main.them_thanh_vien') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Thêm thành viên mới
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã thành viên</th>
+                <th>Họ tên</th>
+                <th>Số điện thoại</th>
+                <th>Email</th>
+                <th>Ngày đăng ký</th>
+                <th>Thẻ thư viện</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tv in thanh_vien.items %}
+            <tr>
+                <td>{{ tv.ma_thanh_vien }}</td>
+                <td>{{ tv.ho_ten }}</td>
+                <td>{{ tv.sdt or 'N/A' }}</td>
+                <td>{{ tv.email or 'N/A' }}</td>
+                <td>{{ tv.ngay_dang_ky.strftime('%d/%m/%Y') if tv.ngay_dang_ky else 'N/A' }}</td>
+                <td>
+                    {% if tv.the_thu_vien %}
+                    <span class="badge badge-success">{{ tv.the_thu_vien.ma_the }}</span>
+                    {% else %}
+                    <span class="badge badge-danger">Chưa cấp</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('main.sua_thanh_vien', ma_thanh_vien=tv.ma_thanh_vien) }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">Không có thành viên nào</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if thanh_vien.pages > 1 %}
+<div class="pagination">
+    {% if thanh_vien.has_prev %}
+        <a href="{{ url_for('main.danh_sach_thanh_vien', page=thanh_vien.prev_num) }}" class="btn btn-sm">← Trước</a>
+    {% endif %}
+    
+    <span>Trang {{ thanh_vien.page }} của {{ thanh_vien.pages }}</span>
+    
+    {% if thanh_vien.has_next %}
+        <a href="{{ url_for('main.danh_sach_thanh_vien', page=thanh_vien.next_num) }}" class="btn btn-sm">Sau →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

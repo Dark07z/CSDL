@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Thêm sách mới{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-book-open"></i> Thêm sách mới</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="ma_sach">Mã sách *</label>
+            <input type="text" id="ma_sach" name="ma_sach" required placeholder="VD: S001">
+        </div>
+
+        <div class="form-group">
+            <label for="ten_sach">Tên sách *</label>
+            <input type="text" id="ten_sach" name="ten_sach" required placeholder="Nhập tên sách">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="tac_gia">Tác giả</label>
+                <input type="text" id="tac_gia" name="tac_gia" placeholder="Nhập tên tác giả">
+            </div>
+
+            <div class="form-group">
+                <label for="nam_xb">Năm xuất bản</label>
+                <input type="number" id="nam_xb" name="nam_xb" placeholder="VD: 2023">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nha_xb">Nhà xuất bản</label>
+                <input type="text" id="nha_xb" name="nha_xb" placeholder="Nhập tên nhà xuất bản">
+            </div>
+
+            <div class="form-group">
+                <label for="so_luong">Số lượng *</label>
+                <input type="number" id="so_luong" name="so_luong" required min="0" placeholder="0">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ma_tl">Thể loại *</label>
+                <select id="ma_tl" name="ma_tl" required>
+                    <option value="">-- Chọn thể loại --</option>
+                    {% for tl in the_loai %}
+                    <option value="{{ tl.ma_tl }}">{{ tl.ten_tl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ma_ncc">Nhà cung cấp</label>
+                <select id="ma_ncc" name="ma_ncc">
+                    <option value="">-- Chọn nhà cung cấp --</option>
+                    {% for ncc in nha_cung_cap %}
+                    <option value="{{ ncc.ma_ncc }}">{{ ncc.ten_ncc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Lưu sách
+            </button>
+            <a href="{{ url_for('main.danh_sach_sach') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

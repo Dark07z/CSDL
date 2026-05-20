@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Trả sách - {{ don_muon.ma_don_muon }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-undo"></i> Trả sách</h1>
+</div>
+
+<div class="form-container">
+    <div class="info-box">
+        <h3>Thông tin đơn mượn</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <label>Mã đơn mượn:</label>
+                <span>{{ don_muon.ma_don_muon }}</span>
+            </div>
+            <div class="info-item">
+                <label>Thành viên:</label>
+                <span>{{ don_muon.thanh_vien.ho_ten }}</span>
+            </div>
+            <div class="info-item">
+                <label>Sách:</label>
+                <span>{{ don_muon.ban_sao.sach.ten_sach }}</span>
+            </div>
+            <div class="info-item">
+                <label>Ngày mượn:</label>
+                <span>{{ don_muon.ngay_muon.strftime('%d/%m/%Y') }}</span>
+            </div>
+            <div class="info-item">
+                <label>Hạn trả:</label>
+                <span>{{ don_muon.han_tra.strftime('%d/%m/%Y') }}</span>
+            </div>
+            <div class="info-item">
+                <label>Trạng thái:</label>
+                <span>
+                    {% if don_muon.trang_thai == 'Đang mượn' %}
+                        <span class="badge badge-warning">Đang mượn</span>
+                    {% elif don_muon.trang_thai == 'Quá hạn' %}
+                        <span class="badge badge-danger">Quá hạn</span>
+                    {% else %}
+                        <span class="badge badge-success">Đã trả</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" class="form">
+        <h3>Xác nhận trả sách</h3>
+        
+        <div class="warning-box">
+            {% set today = [] %}
+            {% if today.append(request.date() or import.date.today()) %}{% endif %}
+            {% set ngay_hom_nay = today[0] %}
+            
+            {% if don_muon.han_tra < ngay_hom_nay %}
+                <p class="text-danger"><strong>⚠️ Cảnh báo:</strong> Sách trả muộn!</p>
+                <p>
+                    Số ngày trễ: <strong>{{ (ngay_hom_nay - don_muon.han_tra).days }} ngày</strong><br>
+                    Phí phạt dự kiến: <strong>{{ (ngay_hom_nay - don_muon.han_tra).days * 5000 }} VND</strong>
+                </p>
+            {% else %}
+                <p class="text-success">✓ Sách trả đúng hạn</p>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-check"></i> Xác nhận trả sách
+            </button>
+            <a href="{{ url_for('main.danh_sach_don_muon') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Thêm chi nhánh mới{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-building"></i> Thêm chi nhánh mới</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="ma_chi_nhanh">Mã chi nhánh *</label>
+            <input type="text" id="ma_chi_nhanh" name="ma_chi_nhanh" required placeholder="VD: CN01">
+        </div>
+
+        <div class="form-group">
+            <label for="ten_chi_nhanh">Tên chi nhánh *</label>
+            <input type="text" id="ten_chi_nhanh" name="ten_chi_nhanh" required placeholder="Nhập tên chi nhánh">
+        </div>
+
+        <div class="form-group">
+            <label for="dia_chi">Địa chỉ</label>
+            <input type="text" id="dia_chi" name="dia_chi" placeholder="Nhập địa chỉ">
+        </div>
+
+        <div class="form-group">
+            <label for="sdt">Số điện thoại</label>
+            <input type="tel" id="sdt" name="sdt" placeholder="Nhập số điện thoại">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Thêm chi nhánh
+            </button>
+            <a href="{{ url_for('main.danh_sach_chi_nhanh') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách đơn mượn{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-exchange-alt"></i> Quản lý mượn/trả sách</h1>
+    <p>Danh sách tất cả các đơn mượn sách</p>
+</div>
+
+<div class="toolbar">
+    <a href="{{ url_for('main.them_don_muon') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Tạo đơn mượn mới
+    </a>
+    {% if trang_thai %}
+    <a href="{{ url_for('main.danh_sach_don_muon') }}" class="btn btn-secondary">
+        <i class="fas fa-times"></i> Xóa bộ lọc
+    </a>
+    {% endif %}
+</div>
+
+<div class="filter-bar">
+    <a href="{{ url_for('main.danh_sach_don_muon', trang_thai='Đang mượn') }}" class="btn btn-sm {% if trang_thai == 'Đang mượn' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+        Đang mượn
+    </a>
+    <a href="{{ url_for('main.danh_sach_don_muon', trang_thai='Đã trả') }}" class="btn btn-sm {% if trang_thai == 'Đã trả' %}btn-success{% else %}btn-outline-success{% endif %}">
+        Đã trả
+    </a>
+    <a href="{{ url_for('main.danh_sach_don_muon', trang_thai='Quá hạn') }}" class="btn btn-sm {% if trang_thai == 'Quá hạn' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+        Quá hạn
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã đơn mượn</th>
+                <th>Thành viên</th>
+                <th>Sách</th>
+                <th>Nhân viên</th>
+                <th>Ngày mượn</th>
+                <th>Hạn trả</th>
+                <th>Trạng thái</th>
+                <th>Phí phạt</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dm in don_muon.items %}
+            <tr>
+                <td>{{ dm.ma_don_muon }}</td>
+                <td>{{ dm.thanh_vien.ho_ten if dm.thanh_vien else 'N/A' }}</td>
+                <td>{{ dm.ban_sao.sach.ten_sach if dm.ban_sao else 'N/A' }}</td>
+                <td>{{ dm.nhan_vien.ho_ten if dm.nhan_vien else 'N/A' }}</td>
+                <td>{{ dm.ngay_muon.strftime('%d/%m/%Y') }}</td>
+                <td>{{ dm.han_tra.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    {% if dm.trang_thai == 'Đang mượn' %}
+                        <span class="badge badge-warning">Đang mượn</span>
+                    {% elif dm.trang_thai == 'Đã trả' %}
+                        <span class="badge badge-success">Đã trả</span>
+                    {% else %}
+                        <span class="badge badge-danger">Quá hạn</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if dm.phu_phat > 0 %}
+                        <span class="badge badge-danger">{{ dm.phu_phat|int }} VND</span>
+                    {% else %}
+                        0 VND
+                    {% endif %}
+                </td>
+                <td>
+                    {% if dm.trang_thai == 'Đang mượn' or dm.trang_thai == 'Quá hạn' %}
+                        <a href="{{ url_for('main.tra_sach', ma_don_muon=dm.ma_don_muon) }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> Trả
+                        </a>
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="text-center">Không có đơn mượn nào</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if don_muon.pages > 1 %}
+<div class="pagination">
+    {% if don_muon.has_prev %}
+        <a href="{{ url_for('main.danh_sach_don_muon', page=don_muon.prev_num, trang_thai=trang_thai) }}" class="btn btn-sm">← Trước</a>
+    {% endif %}
+    
+    <span>Trang {{ don_muon.page }} của {{ don_muon.pages }}</span>
+    
+    {% if don_muon.has_next %}
+        <a href="{{ url_for('main.danh_sach_don_muon', page=don_muon.next_num, trang_thai=trang_thai) }}" class="btn btn-sm">Sau →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

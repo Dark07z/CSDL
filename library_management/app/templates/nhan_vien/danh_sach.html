@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách nhân viên{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-user-tie"></i> Quản lý nhân viên</h1>
+    <p>Danh sách nhân viên thư viện tại các chi nhánh</p>
+</div>
+
+<div class="toolbar">
+    <a href="{{ url_for('main.them_nhan_vien') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Thêm nhân viên mới
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã nhân viên</th>
+                <th>Họ tên</th>
+                <th>Chi nhánh</th>
+                <th>Số điện thoại</th>
+                <th>Email</th>
+                <th>Ngày vào làm</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nv in nhan_vien.items %}
+            <tr>
+                <td>{{ nv.ma_nv }}</td>
+                <td>{{ nv.ho_ten }}</td>
+                <td>{{ nv.chi_nhanh.ten_chi_nhanh if nv.chi_nhanh else 'N/A' }}</td>
+                <td>{{ nv.sdt or 'N/A' }}</td>
+                <td>{{ nv.email or 'N/A' }}</td>
+                <td>{{ nv.ngay_vao.strftime('%d/%m/%Y') if nv.ngay_vao else 'N/A' }}</td>
+                <td>
+                    <a href="{{ url_for('main.danh_sach_nhan_vien') }}" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">Không có nhân viên nào</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if nhan_vien.pages > 1 %}
+<div class="pagination">
+    {% if nhan_vien.has_prev %}
+        <a href="{{ url_for('main.danh_sach_nhan_vien', page=nhan_vien.prev_num) }}" class="btn btn-sm">← Trước</a>
+    {% endif %}
+    
+    <span>Trang {{ nhan_vien.page }} của {{ nhan_vien.pages }}</span>
+    
+    {% if nhan_vien.has_next %}
+        <a href="{{ url_for('main.danh_sach_nhan_vien', page=nhan_vien.next_num) }}" class="btn btn-sm">Sau →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

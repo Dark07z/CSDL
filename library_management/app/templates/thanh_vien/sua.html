@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Sửa thành viên - {{ thanh_vien.ho_ten }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-edit"></i> Sửa thông tin thành viên</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="ma_thanh_vien">Mã thành viên</label>
+            <input type="text" id="ma_thanh_vien" value="{{ thanh_vien.ma_thanh_vien }}" disabled>
+        </div>
+
+        <div class="form-group">
+            <label for="ho_ten">Họ tên *</label>
+            <input type="text" id="ho_ten" name="ho_ten" value="{{ thanh_vien.ho_ten }}" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="sdt">Số điện thoại</label>
+                <input type="tel" id="sdt" name="sdt" value="{{ thanh_vien.sdt or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ thanh_vien.email or '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="ghi_chu">Ghi chú</label>
+            <textarea id="ghi_chu" name="ghi_chu" rows="4">{{ thanh_vien.ghi_chu or '' }}</textarea>
+        </div>
+
+        {% if thanh_vien.the_thu_vien %}
+        <div class="info-box">
+            <h4>Thông tin thẻ thư viện</h4>
+            <p><strong>Mã thẻ:</strong> {{ thanh_vien.the_thu_vien.ma_the }}</p>
+            <p><strong>Ngày cấp:</strong> {{ thanh_vien.the_thu_vien.ngay_cap.strftime('%d/%m/%Y') }}</p>
+            <p><strong>Ngày hết hạn:</strong> {{ thanh_vien.the_thu_vien.ngay_het_han.strftime('%d/%m/%Y') }}</p>
+            <p><strong>Trạng thái:</strong> <span class="badge badge-info">{{ thanh_vien.the_thu_vien.trang_thai }}</span></p>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Lưu thay đổi
+            </button>
+            <a href="{{ url_for('main.danh_sach_thanh_vien') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

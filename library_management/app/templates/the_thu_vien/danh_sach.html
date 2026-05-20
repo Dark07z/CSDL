@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách thẻ thư viện{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-id-card"></i> Quản lý thẻ thư viện</h1>
+    <p>Danh sách thẻ thư viện của tất cả thành viên</p>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã thẻ</th>
+                <th>Thành viên</th>
+                <th>Ngày cấp</th>
+                <th>Ngày hết hạn</th>
+                <th>Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for the in the_thu_vien.items %}
+            <tr>
+                <td>{{ the.ma_the }}</td>
+                <td>{{ the.thanh_vien.ho_ten if the.thanh_vien else 'N/A' }}</td>
+                <td>{{ the.ngay_cap.strftime('%d/%m/%Y') }}</td>
+                <td>{{ the.ngay_het_han.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    {% if the.trang_thai == 'Hoạt động' %}
+                        <span class="badge badge-success">Hoạt động</span>
+                    {% elif the.trang_thai == 'Hết hạn' %}
+                        <span class="badge badge-warning">Hết hạn</span>
+                    {% else %}
+                        <span class="badge badge-danger">Khóa</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">Không có thẻ thư viện nào</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if the_thu_vien.pages > 1 %}
+<div class="pagination">
+    {% if the_thu_vien.has_prev %}
+        <a href="{{ url_for('main.danh_sach_the_thu_vien', page=the_thu_vien.prev_num) }}" class="btn btn-sm">← Trước</a>
+    {% endif %}
+    
+    <span>Trang {{ the_thu_vien.page }} của {{ the_thu_vien.pages }}</span>
+    
+    {% if the_thu_vien.has_next %}
+        <a href="{{ url_for('main.danh_sach_the_thu_vien', page=the_thu_vien.next_num) }}" class="btn btn-sm">Sau →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

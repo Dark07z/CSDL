@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Tạo đơn mượn mới{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-plus-circle"></i> Tạo đơn mượn mới</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="ma_don_muon">Mã đơn mượn *</label>
+            <input type="text" id="ma_don_muon" name="ma_don_muon" required placeholder="VD: DM001">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ma_thanh_vien">Thành viên *</label>
+                <select id="ma_thanh_vien" name="ma_thanh_vien" required>
+                    <option value="">-- Chọn thành viên --</option>
+                    {% for tv in thanh_vien %}
+                    <option value="{{ tv.ma_thanh_vien }}">{{ tv.ho_ten }} ({{ tv.ma_thanh_vien }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ma_ban_sao">Bản sao sách *</label>
+                <select id="ma_ban_sao" name="ma_ban_sao" required>
+                    <option value="">-- Chọn sách --</option>
+                    {% for bs in ban_sao %}
+                    <option value="{{ bs.ma_ban_sao }}">{{ bs.sach.ten_sach }} ({{ bs.ma_ban_sao }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ma_nv">Nhân viên *</label>
+                <select id="ma_nv" name="ma_nv" required>
+                    <option value="">-- Chọn nhân viên --</option>
+                    {% for nv in nhan_vien %}
+                    <option value="{{ nv.ma_nv }}">{{ nv.ho_ten }} ({{ nv.ma_nv }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <p><strong>Ghi chú:</strong></p>
+            <ul>
+                <li>Hạn trả mặc định: 30 ngày kể từ ngày mượn</li>
+                <li>Phí phạt: 5.000 VND/ngày nếu trả muộn</li>
+                <li>Trạng thái ban đầu: Đang mượn</li>
+            </ul>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Tạo đơn mượn
+            </button>
+            <a href="{{ url_for('main.danh_sach_don_muon') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

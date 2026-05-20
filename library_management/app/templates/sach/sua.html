@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Sửa sách - {{ sach.ten_sach }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-edit"></i> Sửa thông tin sách</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST" class="form">
+        <div class="form-group">
+            <label for="ma_sach">Mã sách</label>
+            <input type="text" id="ma_sach" value="{{ sach.ma_sach }}" disabled>
+        </div>
+
+        <div class="form-group">
+            <label for="ten_sach">Tên sách *</label>
+            <input type="text" id="ten_sach" name="ten_sach" value="{{ sach.ten_sach }}" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="tac_gia">Tác giả</label>
+                <input type="text" id="tac_gia" name="tac_gia" value="{{ sach.tac_gia or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="nam_xb">Năm xuất bản</label>
+                <input type="number" id="nam_xb" name="nam_xb" value="{{ sach.nam_xb or '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nha_xb">Nhà xuất bản</label>
+                <input type="text" id="nha_xb" name="nha_xb" value="{{ sach.nha_xb or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="so_luong">Số lượng *</label>
+                <input type="number" id="so_luong" name="so_luong" value="{{ sach.so_luong }}" required min="0">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ma_tl">Thể loại *</label>
+                <select id="ma_tl" name="ma_tl" required>
+                    <option value="">-- Chọn thể loại --</option>
+                    {% for tl in the_loai %}
+                    <option value="{{ tl.ma_tl }}" {% if tl.ma_tl == sach.ma_tl %}selected{% endif %}>{{ tl.ten_tl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ma_ncc">Nhà cung cấp</label>
+                <select id="ma_ncc" name="ma_ncc">
+                    <option value="">-- Chọn nhà cung cấp --</option>
+                    {% for ncc in nha_cung_cap %}
+                    <option value="{{ ncc.ma_ncc }}" {% if ncc.ma_ncc == sach.ma_ncc %}selected{% endif %}>{{ ncc.ten_ncc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Lưu thay đổi
+            </button>
+            <a href="{{ url_for('main.danh_sach_sach') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

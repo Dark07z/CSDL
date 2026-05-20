@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Danh sách chi nhánh{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-building"></i> Quản lý chi nhánh</h1>
+    <p>Danh sách tất cả chi nhánh thư viện</p>
+</div>
+
+<div class="toolbar">
+    <a href="{{ url_for('main.them_chi_nhanh') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Thêm chi nhánh mới
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã chi nhánh</th>
+                <th>Tên chi nhánh</th>
+                <th>Địa chỉ</th>
+                <th>Số điện thoại</th>
+                <th>Số sách</th>
+                <th>Số nhân viên</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cn in chi_nhanh %}
+            <tr>
+                <td>{{ cn.ma_chi_nhanh }}</td>
+                <td>{{ cn.ten_chi_nhanh }}</td>
+                <td>{{ cn.dia_chi or 'N/A' }}</td>
+                <td>{{ cn.sdt or 'N/A' }}</td>
+                <td><span class="badge badge-info">{{ cn.ban_sao|length }}</span></td>
+                <td><span class="badge badge-success">{{ cn.nhan_vien|length }}</span></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center">Không có chi nhánh nào</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

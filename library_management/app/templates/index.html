@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Trang chủ - Hệ thống Quản lý Thư viện{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+    <p>Tổng quan hệ thống quản lý thư viện</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-icon" style="color: #3498db;">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ stats.total_sach }}</h3>
+            <p>Tổng số sách</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="color: #2ecc71;">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ stats.total_thanh_vien }}</h3>
+            <p>Thành viên</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="color: #9b59b6;">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ stats.total_nhan_vien }}</h3>
+            <p>Nhân viên</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="color: #e74c3c;">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ stats.don_muon_qua_han }}</h3>
+            <p>Đơn mượn quá hạn</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="color: #f39c12;">
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ stats.don_muon_dang_hoat }}</h3>
+            <p>Đơn mượn đang diễn ra</p>
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <h2>Hành động nhanh</h2>
+    <div class="action-buttons">
+        <a href="{{ url_for('main.them_sach') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Thêm sách
+        </a>
+        <a href="{{ url_for('main.them_thanh_vien') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Thêm thành viên
+        </a>
+        <a href="{{ url_for('main.them_don_muon') }}" class="btn btn-info">
+            <i class="fas fa-plus"></i> Tạo đơn mượn
+        </a>
+        <a href="{{ url_for('main.danh_sach_don_muon') }}" class="btn btn-warning">
+            <i class="fas fa-list"></i> Xem đơn mượn
+        </a>
+    </div>
+</div>
+{% endblock %}
