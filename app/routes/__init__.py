@@ -293,6 +293,19 @@ def them_don_muon():
             ma_nv = request.form.get('ma_nv')
             ngay_muon = date.today()
             han_tra = ngay_muon + timedelta(days=30)
+
+            # Chỉ cho mượn nếu bản sao chưa có đơn mượn đang hoạt động
+            active_loan = db.session.query(DonMuon).filter(
+                DonMuon.ma_ban_sao == ma_ban_sao,
+                DonMuon.trang_thai.in_(['Đang mượn', 'Quá hạn'])
+            ).first()
+            if active_loan:
+                flash('Bản sao này đang được mượn. Hãy chọn bản sao khác.', 'danger')
+                return redirect(url_for('main.them_don_muon'))
+
+            if not db.session.get(BanSao, ma_ban_sao):
+                flash('Không tìm thấy bản sao sách.', 'danger')
+                return redirect(url_for('main.them_don_muon'))
             
             don_muon_moi = DonMuon(
                 ma_don_muon=ma_don_muon,
@@ -313,7 +326,10 @@ def them_don_muon():
             flash(f'Lỗi: {str(e)}', 'danger')
     
     thanh_vien = db.session.query(ThanhVien).all()
-    ban_sao = db.session.query(BanSao).all()
+    active_borrowed = db.session.query(DonMuon.ma_ban_sao).filter(
+        DonMuon.trang_thai.in_(['Đang mượn', 'Quá hạn'])
+    ).subquery()
+    ban_sao = db.session.query(BanSao).filter(~BanSao.ma_ban_sao.in_(db.select(active_borrowed.c.ma_ban_sao))).all()
     nhan_vien = db.session.query(NhanVien).all()
     return render_template('don_muon/them.html', thanh_vien=thanh_vien, ban_sao=ban_sao, nhan_vien=nhan_vien)
 
