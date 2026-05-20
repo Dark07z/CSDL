@@ -50,15 +50,11 @@
         <h3>Xác nhận trả sách</h3>
         
         <div class="warning-box">
-            {% set today = [] %}
-            {% if today.append(request.date() or import.date.today()) %}{% endif %}
-            {% set ngay_hom_nay = today[0] %}
-            
             {% if don_muon.han_tra < ngay_hom_nay %}
                 <p class="text-danger"><strong>⚠️ Cảnh báo:</strong> Sách trả muộn!</p>
                 <p>
                     Số ngày trễ: <strong>{{ (ngay_hom_nay - don_muon.han_tra).days }} ngày</strong><br>
-                    Phí phạt dự kiến: <strong>{{ (ngay_hom_nay - don_muon.han_tra).days * 5000 }} VND</strong>
+                    Phí phạt dự kiến: <strong>{{ phi_phat_du_kien }} VND</strong>
                 </p>
             {% else %}
                 <p class="text-success">✓ Sách trả đúng hạn</p>

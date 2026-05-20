@@ -364,7 +364,18 @@ def tra_sach(ma_don_muon):
             db.session.rollback()
             flash(f'Lỗi: {str(e)}', 'danger')
     
-    return render_template('don_muon/tra.html', don_muon=don_muon)
+    from datetime import date
+    ngay_hom_nay = date.today()
+    phi_phat_du_kien = 0
+    if ngay_hom_nay > don_muon.han_tra:
+        phi_phat_du_kien = (ngay_hom_nay - don_muon.han_tra).days * 5000
+
+    return render_template(
+        'don_muon/tra.html',
+        don_muon=don_muon,
+        ngay_hom_nay=ngay_hom_nay,
+        phi_phat_du_kien=phi_phat_du_kien
+    )
 
 # ===================== QUẢN LÝ THẺ THƯ VIỆN =====================
 
