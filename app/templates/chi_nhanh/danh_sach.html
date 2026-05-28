@@ -34,7 +34,12 @@
                 <td>{{ cn.dia_chi or 'N/A' }}</td>
                 <td>{{ cn.sdt or 'N/A' }}</td>
                 <td><span class="badge badge-info">{{ cn.ban_sao|length }}</span></td>
-                <td><span class="badge badge-success">{{ cn.nhan_vien|length }}</span></td>
+                <td>
+                    <span class="badge badge-success">{{ cn.nhan_vien|length }}</span>
+                    <form method="POST" action="{{ url_for('main.xoa_chi_nhanh', ma_chi_nhanh=cn.ma_chi_nhanh) }}" style="display:inline-block; margin-left:8px;" onsubmit="return confirm('Bạn có chắc muốn xóa chi nhánh này?');">
+                        <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
             </tr>
             {% else %}
             <tr>

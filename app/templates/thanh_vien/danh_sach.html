@@ -32,6 +32,11 @@
             <tr>
                 <td>{{ tv.ma_thanh_vien }}</td>
                 <td>{{ tv.ho_ten }}</td>
+                <td>
+                    {% if tv.is_blacklisted %}
+                        <span class="badge badge-danger">Đã bị chặn</span>
+                    {% endif %}
+                </td>
                 <td>{{ tv.sdt or 'N/A' }}</td>
                 <td>{{ tv.email or 'N/A' }}</td>
                 <td>{{ tv.ngay_dang_ky.strftime('%d/%m/%Y') if tv.ngay_dang_ky else 'N/A' }}</td>
@@ -46,6 +51,19 @@
                     <a href="{{ url_for('main.sua_thanh_vien', ma_thanh_vien=tv.ma_thanh_vien) }}" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit"></i>
                     </a>
+                    {% if not tv.is_blacklisted %}
+                    <form method="POST" action="{{ url_for('main.blacklist_thanh_vien', ma_thanh_vien=tv.ma_thanh_vien) }}" style="display:inline-block; margin-left:6px;">
+                        <input type="hidden" name="note" value="Quá hạn lâu ngày / Hư hỏng mất mát">
+                        <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('Đưa thành viên này vào danh sách đen?')"><i class="fas fa-user-slash"></i></button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('main.unblacklist_thanh_vien', ma_thanh_vien=tv.ma_thanh_vien) }}" style="display:inline-block; margin-left:6px;">
+                        <button class="btn btn-sm btn-success" type="submit" onclick="return confirm('Gỡ thành viên này khỏi danh sách đen?')"><i class="fas fa-user-check"></i></button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('main.xoa_thanh_vien', ma_thanh_vien=tv.ma_thanh_vien) }}" style="display:inline-block" onsubmit="return confirm('Bạn có chắc muốn xóa thành viên này?');">
+                        <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
+                    </form>
                 </td>
             </tr>
             {% else %}

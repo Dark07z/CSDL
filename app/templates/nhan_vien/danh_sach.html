@@ -40,6 +40,9 @@
                     <a href="{{ url_for('main.danh_sach_nhan_vien') }}" class="btn btn-sm btn-info">
                         <i class="fas fa-eye"></i>
                     </a>
+                    <form method="POST" action="{{ url_for('main.xoa_nhan_vien', ma_nv=nv.ma_nv) }}" style="display:inline-block" onsubmit="return confirm('Bạn có chắc muốn xóa nhân viên này?');">
+                        <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
+                    </form>
                 </td>
             </tr>
             {% else %}

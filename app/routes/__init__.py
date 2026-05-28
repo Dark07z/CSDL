@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from app.database import db
 from app.models import *
 from datetime import datetime, timedelta
-from sqlalchemy import desc
+from sqlalchemy import desc, or_, func
 
 bp = Blueprint('main', __name__)
 
@@ -26,8 +26,36 @@ def index():
 def danh_sach_sach():
     """Danh sách sách"""
     page = request.args.get('page', 1, type=int)
-    sach = db.paginate(db.select(Sach), page=page, per_page=10)
-    return render_template('sach/danh_sach.html', sach=sach)
+
+    # Filters
+    q = request.args.get('q', '').strip()            # tìm theo tên sách (gần đúng)
+    tac_gia = request.args.get('tac_gia', '').strip()
+    ma_tl = request.args.get('ma_tl', '').strip()
+    ten_tl = request.args.get('ten_tl', '').strip()
+
+    query = db.select(Sach)
+
+    # Lọc theo mã thể loại chính xác
+    if ma_tl:
+        query = query.where(Sach.ma_tl == ma_tl)
+
+    # Lọc theo tên thể loại (gần đúng) - cần join ThaiLoai
+    if ten_tl:
+        query = query.join(ThaiLoai).where(ThaiLoai.ten_tl.ilike(f"%{ten_tl}%"))
+
+    # Lọc theo tác giả (gần đúng)
+    if tac_gia:
+        query = query.where(Sach.tac_gia.ilike(f"%{tac_gia}%"))
+
+    # Tìm gần đúng theo tên sách
+    if q:
+        query = query.where(Sach.ten_sach.ilike(f"%{q}%"))
+
+    sach = db.paginate(query, page=page, per_page=10)
+
+    the_loai = db.session.query(ThaiLoai).all()
+    filters = {'q': q, 'tac_gia': tac_gia, 'ma_tl': ma_tl, 'ten_tl': ten_tl}
+    return render_template('sach/danh_sach.html', sach=sach, the_loai=the_loai, filters=filters)
 
 @bp.route('/sach/them', methods=['GET', 'POST'])
 def them_sach():
@@ -60,20 +88,33 @@ def them_sach():
             db.session.add(sach_moi)
             db.session.commit()
 
-            # Sau khi sach_moi đã commit, tạo bản sao (BanSao) tương ứng với số lượng nếu có chi nhánh
+            # Sau khi sach_moi đã commit, tạo bản sao (BanSao) tại chi nhánh được chọn (hoặc chi nhánh mặc định)
             try:
-                default_branch = db.session.query(ChiNhanh).first()
-                if default_branch and so_luong > 0:
+                selected_branch = request.form.get('ma_chi_nhanh')
+                if selected_branch and so_luong > 0:
                     for i in range(so_luong):
                         ma_bs = f"{ma_sach}-BS{str(i+1).zfill(3)}"
                         ban_sao = BanSao(
                             ma_ban_sao=ma_bs,
                             ma_sach=ma_sach,
-                            ma_chi_nhanh=default_branch.ma_chi_nhanh,
+                            ma_chi_nhanh=selected_branch,
                             ngay_nhap=datetime.now().date()
                         )
                         db.session.add(ban_sao)
                     db.session.commit()
+                else:
+                    default_branch = db.session.query(ChiNhanh).first()
+                    if default_branch and so_luong > 0:
+                        for i in range(so_luong):
+                            ma_bs = f"{ma_sach}-BS{str(i+1).zfill(3)}"
+                            ban_sao = BanSao(
+                                ma_ban_sao=ma_bs,
+                                ma_sach=ma_sach,
+                                ma_chi_nhanh=default_branch.ma_chi_nhanh,
+                                ngay_nhap=datetime.now().date()
+                            )
+                            db.session.add(ban_sao)
+                        db.session.commit()
             except Exception:
                 db.session.rollback()
             flash(f'Thêm sách "{ten_sach}" thành công!', 'success')
@@ -84,7 +125,8 @@ def them_sach():
     
     the_loai = db.session.query(ThaiLoai).all()
     nha_cung_cap = db.session.query(NhaCungCap).all()
-    return render_template('sach/them.html', the_loai=the_loai, nha_cung_cap=nha_cung_cap)
+    chi_nhanh = db.session.query(ChiNhanh).all()
+    return render_template('sach/them.html', the_loai=the_loai, nha_cung_cap=nha_cung_cap, chi_nhanh=chi_nhanh)
 
 @bp.route('/sach/<ma_sach>/sua', methods=['GET', 'POST'])
 def sua_sach(ma_sach):
@@ -168,7 +210,22 @@ def them_thanh_vien():
             sdt = request.form.get('sdt')
             email = request.form.get('email')
             ghi_chu = request.form.get('ghi_chu')
-            
+            # Nếu mã thành viên không được cung cấp, tự sinh mã dạng TV###
+            if not ma_thanh_vien:
+                existing = [r[0] for r in db.session.query(ThanhVien.ma_thanh_vien).all()]
+                max_num = 0
+                for eid in existing:
+                    if eid and eid.upper().startswith('TV'):
+                        suffix = eid[2:]
+                        if suffix.isdigit():
+                            max_num = max(max_num, int(suffix))
+                ma_thanh_vien = f'TV{str(max_num+1).zfill(3)}'
+
+            # Kiểm tra trùng mã thành viên
+            if db.session.get(ThanhVien, ma_thanh_vien):
+                flash(f'Mã thành viên "{ma_thanh_vien}" đã tồn tại. Vui lòng chọn mã khác.', 'danger')
+                return redirect(url_for('main.them_thanh_vien'))
+
             thanh_vien_moi = ThanhVien(
                 ma_thanh_vien=ma_thanh_vien,
                 ho_ten=ho_ten,
@@ -223,6 +280,66 @@ def sua_thanh_vien(ma_thanh_vien):
     
     return render_template('thanh_vien/sua.html', thanh_vien=thanh_vien)
 
+
+@bp.route('/thanh-vien/<ma_thanh_vien>/xoa', methods=['POST'])
+def xoa_thanh_vien(ma_thanh_vien):
+    """Xóa thành viên và thẻ liên quan nếu có"""
+    thanh_vien = db.session.get(ThanhVien, ma_thanh_vien)
+    if not thanh_vien:
+        flash('Không tìm thấy thành viên', 'danger')
+        return redirect(url_for('main.danh_sach_thanh_vien'))
+    try:
+        # Xóa thẻ trước nếu tồn tại
+        if getattr(thanh_vien, 'the_thu_vien', None):
+            try:
+                db.session.delete(thanh_vien.the_thu_vien)
+            except Exception:
+                pass
+        db.session.delete(thanh_vien)
+        db.session.commit()
+        flash('Xóa thành viên thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi xóa thành viên: {str(e)}', 'danger')
+    return redirect(url_for('main.danh_sach_thanh_vien'))
+
+
+@bp.route('/thanh-vien/<ma_thanh_vien>/blacklist', methods=['POST'])
+def blacklist_thanh_vien(ma_thanh_vien):
+    """Đặt thành viên vào danh sách đen"""
+    thanh_vien = db.session.get(ThanhVien, ma_thanh_vien)
+    if not thanh_vien:
+        flash('Không tìm thấy thành viên', 'danger')
+        return redirect(url_for('main.danh_sach_thanh_vien'))
+    try:
+        note = request.form.get('note') or 'Vi phạm nội quy'
+        thanh_vien.is_blacklisted = True
+        thanh_vien.blacklist_note = note
+        db.session.commit()
+        flash(f'Đã đưa thành viên {ma_thanh_vien} vào danh sách đen.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi: {str(e)}', 'danger')
+    return redirect(url_for('main.danh_sach_thanh_vien'))
+
+
+@bp.route('/thanh-vien/<ma_thanh_vien>/unblacklist', methods=['POST'])
+def unblacklist_thanh_vien(ma_thanh_vien):
+    """Gỡ thành viên khỏi danh sách đen"""
+    thanh_vien = db.session.get(ThanhVien, ma_thanh_vien)
+    if not thanh_vien:
+        flash('Không tìm thấy thành viên', 'danger')
+        return redirect(url_for('main.danh_sach_thanh_vien'))
+    try:
+        thanh_vien.is_blacklisted = False
+        thanh_vien.blacklist_note = None
+        db.session.commit()
+        flash(f'Đã gỡ thành viên {ma_thanh_vien} khỏi danh sách đen.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi: {str(e)}', 'danger')
+    return redirect(url_for('main.danh_sach_thanh_vien'))
+
 # ===================== QUẢN LÝ NHÂN VIÊN =====================
 
 @bp.route('/nhan-vien')
@@ -265,6 +382,23 @@ def them_nhan_vien():
     chi_nhanh = db.session.query(ChiNhanh).all()
     return render_template('nhan_vien/them.html', chi_nhanh=chi_nhanh)
 
+
+@bp.route('/nhan-vien/<ma_nv>/xoa', methods=['POST'])
+def xoa_nhan_vien(ma_nv):
+    """Xóa nhân viên"""
+    nhan_vien = db.session.get(NhanVien, ma_nv)
+    if not nhan_vien:
+        flash('Không tìm thấy nhân viên', 'danger')
+        return redirect(url_for('main.danh_sach_nhan_vien'))
+    try:
+        db.session.delete(nhan_vien)
+        db.session.commit()
+        flash('Xóa nhân viên thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi xóa nhân viên: {str(e)}', 'danger')
+    return redirect(url_for('main.danh_sach_nhan_vien'))
+
 # ===================== QUẢN LÝ MƯỢN / TRẢ =====================
 
 @bp.route('/don-muon')
@@ -302,6 +436,24 @@ def them_don_muon():
             if active_loan:
                 flash('Bản sao này đang được mượn. Hãy chọn bản sao khác.', 'danger')
                 return redirect(url_for('main.them_don_muon'))
+
+            # Ràng buộc: mỗi thành viên tối đa 5 cuốn đang mượn (chưa trả)
+            if ma_thanh_vien:
+                current_active = db.session.query(DonMuon).filter(
+                    DonMuon.ma_thanh_vien == ma_thanh_vien,
+                    DonMuon.trang_thai.in_(['Đang mượn', 'Quá hạn'])
+                ).count()
+                if current_active + 1 > 5:
+                    flash(f'Thành viên {ma_thanh_vien} đã mượn {current_active} cuốn. Không được mượn vượt quá 5 cuốn.', 'danger')
+                    return redirect(url_for('main.them_don_muon'))
+
+            # Chặn nếu thành viên nằm trong blacklist
+            if ma_thanh_vien:
+                tv = db.session.get(ThanhVien, ma_thanh_vien)
+                if tv and getattr(tv, 'is_blacklisted', False):
+                    note = tv.blacklist_note or 'Lý do không rõ'
+                    flash(f'Thành viên bị chặn do nằm trong danh sách đen: {note}. Liên hệ quản trị để giải quyết.', 'danger')
+                    return redirect(url_for('main.them_don_muon'))
 
             if not db.session.get(BanSao, ma_ban_sao):
                 flash('Không tìm thấy bản sao sách.', 'danger')
@@ -348,14 +500,14 @@ def tra_sach(ma_don_muon):
             
             don_muon.ngay_tra_thuc_te = date.today()
             
-            # Kiểm tra trả muộn
+            # Tính phí phạt nếu trả muộn; đánh dấu là 'Đã trả' sau khi trả
             if don_muon.ngay_tra_thuc_te > don_muon.han_tra:
-                don_muon.trang_thai = 'Quá hạn'
                 days_late = (don_muon.ngay_tra_thuc_te - don_muon.han_tra).days
                 don_muon.phu_phat = days_late * Config.FINE_PER_DAY
             else:
-                don_muon.trang_thai = 'Đã trả'
                 don_muon.phu_phat = 0
+
+            don_muon.trang_thai = 'Đã trả'
             
             db.session.commit()
             flash('Trả sách thành công!', 'success')
@@ -385,6 +537,23 @@ def danh_sach_the_thu_vien():
     page = request.args.get('page', 1, type=int)
     the_thu_vien = db.paginate(db.select(TheThuVien), page=page, per_page=10)
     return render_template('the_thu_vien/danh_sach.html', the_thu_vien=the_thu_vien)
+
+
+@bp.route('/the-thu-vien/<ma_the>/xoa', methods=['POST'])
+def xoa_the_thu_vien(ma_the):
+    """Xóa thẻ thư viện"""
+    the = db.session.get(TheThuVien, ma_the)
+    if not the:
+        flash('Không tìm thấy thẻ thư viện', 'danger')
+        return redirect(url_for('main.danh_sach_the_thu_vien'))
+    try:
+        db.session.delete(the)
+        db.session.commit()
+        flash('Xóa thẻ thư viện thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi xóa thẻ: {str(e)}', 'danger')
+    return redirect(url_for('main.danh_sach_the_thu_vien'))
 
 # ===================== QUẢN LÝ CHI NHÁNH =====================
 
@@ -420,3 +589,27 @@ def them_chi_nhanh():
             flash(f'Lỗi: {str(e)}', 'danger')
     
     return render_template('chi_nhanh/them.html')
+
+
+@bp.route('/chi-nhanh/<ma_chi_nhanh>/xoa', methods=['POST'])
+def xoa_chi_nhanh(ma_chi_nhanh):
+    """Xóa chi nhánh nếu không còn bản sao hoặc nhân viên"""
+    chi_nhanh = db.session.get(ChiNhanh, ma_chi_nhanh)
+    if not chi_nhanh:
+        flash('Không tìm thấy chi nhánh', 'danger')
+        return redirect(url_for('main.danh_sach_chi_nhanh'))
+    # Không cho xóa nếu còn bản sao hoặc nhân viên
+    if chi_nhanh.ban_sao and len(chi_nhanh.ban_sao) > 0:
+        flash('Không thể xóa: chi nhánh còn bản sao sách. Vui lòng di chuyển hoặc xóa bản sao trước.', 'danger')
+        return redirect(url_for('main.danh_sach_chi_nhanh'))
+    if chi_nhanh.nhan_vien and len(chi_nhanh.nhan_vien) > 0:
+        flash('Không thể xóa: chi nhánh còn nhân viên. Vui lòng chuyển hoặc xóa nhân viên trước.', 'danger')
+        return redirect(url_for('main.danh_sach_chi_nhanh'))
+    try:
+        db.session.delete(chi_nhanh)
+        db.session.commit()
+        flash('Xóa chi nhánh thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi khi xóa chi nhánh: {str(e)}', 'danger')
+    return redirect(url_for('main.danh_sach_chi_nhanh'))

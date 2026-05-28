@@ -122,6 +122,9 @@ class ThanhVien(db.Model):
     email = db.Column(db.String(100))
     ngay_dang_ky = db.Column(db.Date, default=datetime.now)
     ghi_chu = db.Column(db.Text)
+    # Blacklist fields: khi true, thành viên bị khóa quyền mượn
+    is_blacklisted = db.Column(db.Boolean, default=False)
+    blacklist_note = db.Column(db.String(255))
     
     the_thu_vien = db.relationship('TheThuVien', backref='thanh_vien', lazy=True, cascade='all, delete-orphan', uselist=False)
     don_muon = db.relationship('DonMuon', backref='thanh_vien', lazy=True, cascade='all, delete-orphan')

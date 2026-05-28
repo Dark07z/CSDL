@@ -14,6 +14,28 @@
     </a>
 </div>
 
+<!-- Search / Filter -->
+<form method="get" class="form-inline mb-3">
+    <div class="form-group mr-2">
+        <input type="text" name="q" class="form-control" placeholder="Tên sách (gần đúng)" value="{{ filters.q if filters else '' }}">
+    </div>
+    <div class="form-group mr-2">
+        <input type="text" name="tac_gia" class="form-control" placeholder="Tác giả" value="{{ filters.tac_gia if filters else '' }}">
+    </div>
+    <div class="form-group mr-2">
+        <select name="ma_tl" class="form-control">
+            <option value="">-- Thể loại (mã) --</option>
+            {% for tl in the_loai %}
+            <option value="{{ tl.ma_tl }}" {% if filters and filters.ma_tl==tl.ma_tl %}selected{% endif %}>{{ tl.ma_tl }} - {{ tl.ten_tl }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group mr-2">
+        <input type="text" name="ten_tl" class="form-control" placeholder="Thể loại (tên)" value="{{ filters.ten_tl if filters else '' }}">
+    </div>
+    <button type="submit" class="btn btn-secondary">Tìm</button>
+</form>
+
 <div class="table-responsive">
     <table class="table">
         <thead>

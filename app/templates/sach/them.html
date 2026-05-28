@@ -65,6 +65,17 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label for="ma_chi_nhanh">Chọn chi nhánh để lưu bản sao</label>
+            <select id="ma_chi_nhanh" name="ma_chi_nhanh" class="form-control">
+                <option value="">-- Chi nhánh mặc định --</option>
+                {% for cn in chi_nhanh %}
+                    <option value="{{ cn.ma_chi_nhanh }}">{{ cn.ma_chi_nhanh }} - {{ cn.ten_chi_nhanh }}</option>
+                {% endfor %}
+            </select>
+            <small class="form-text text-muted">Chọn một chi nhánh để tạo tất cả bản sao; nếu để trống, dùng chi nhánh mặc định.</small>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i> Lưu sách
