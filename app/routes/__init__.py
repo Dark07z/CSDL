@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app
 from app.database import db
 from app.models import *
 from datetime import datetime, timedelta
@@ -124,7 +124,12 @@ def them_sach():
             flash(f'Lỗi: {str(e)}', 'danger')
     
     the_loai = db.session.query(ThaiLoai).all()
-    nha_cung_cap = db.session.query(NhaCungCap).all()
+    preferred_suppliers = current_app.config.get('DEFAULT_NHA_CUNG_CAPS', [])
+    preferred_supplier_ids = [supplier['ma_ncc'] for supplier in preferred_suppliers]
+    nha_cung_cap = db.session.query(NhaCungCap).filter(NhaCungCap.ma_ncc.in_(preferred_supplier_ids)).all()
+    nha_cung_cap.sort(
+        key=lambda item: preferred_supplier_ids.index(item.ma_ncc) if item.ma_ncc in preferred_supplier_ids else len(preferred_supplier_ids)
+    )
     chi_nhanh = db.session.query(ChiNhanh).all()
     return render_template('sach/them.html', the_loai=the_loai, nha_cung_cap=nha_cung_cap, chi_nhanh=chi_nhanh)
 
@@ -315,6 +320,11 @@ def blacklist_thanh_vien(ma_thanh_vien):
         note = request.form.get('note') or 'Vi phạm nội quy'
         thanh_vien.is_blacklisted = True
         thanh_vien.blacklist_note = note
+
+        the_thu_vien = getattr(thanh_vien, 'the_thu_vien', None)
+        if the_thu_vien:
+            the_thu_vien.trang_thai = 'Khóa'
+
         db.session.commit()
         flash(f'Đã đưa thành viên {ma_thanh_vien} vào danh sách đen.', 'success')
     except Exception as e:
@@ -331,8 +341,15 @@ def unblacklist_thanh_vien(ma_thanh_vien):
         flash('Không tìm thấy thành viên', 'danger')
         return redirect(url_for('main.danh_sach_thanh_vien'))
     try:
+        from datetime import date
+
         thanh_vien.is_blacklisted = False
         thanh_vien.blacklist_note = None
+
+        the_thu_vien = getattr(thanh_vien, 'the_thu_vien', None)
+        if the_thu_vien:
+            the_thu_vien.trang_thai = 'Hoạt động' if the_thu_vien.ngay_het_han >= date.today() else 'Hết hạn'
+
         db.session.commit()
         flash(f'Đã gỡ thành viên {ma_thanh_vien} khỏi danh sách đen.', 'success')
     except Exception as e:
