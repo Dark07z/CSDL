@@ -349,6 +349,65 @@ def danh_sach_nhan_vien():
     nhan_vien = db.paginate(db.select(NhanVien), page=page, per_page=10)
     return render_template('nhan_vien/danh_sach.html', nhan_vien=nhan_vien)
 
+
+@bp.route('/nhan-vien/<ma_nv>/ca-lam', methods=['GET', 'POST'])
+def quan_ly_ca_lam_nhan_vien(ma_nv):
+    """Quản lý ca làm cho một nhân viên cụ thể"""
+    nhan_vien = db.session.get(NhanVien, ma_nv)
+    if not nhan_vien:
+        flash('Không tìm thấy nhân viên', 'danger')
+        return redirect(url_for('main.danh_sach_nhan_vien'))
+
+    if request.method == 'POST':
+        try:
+            ma_ca_lam = request.form.get('ma_ca_lam')
+            thoi_bat_dau = request.form.get('thoi_gian_bat_dau')
+            thoi_ket_thuc = request.form.get('thoi_gian_ket_thuc')
+
+            # Tự sinh mã ca nếu không nhập
+            if not ma_ca_lam:
+                existing = [r[0] for r in db.session.query(CaLam.ma_ca_lam).all()]
+                max_num = 0
+                for eid in existing:
+                    if eid and eid.upper().startswith('CA'):
+                        s = ''.join([c for c in eid if c.isdigit()])
+                        if s.isdigit():
+                            max_num = max(max_num, int(s))
+                ma_ca_lam = f'CA{str(max_num+1).zfill(3)}'
+
+            from datetime import datetime
+            tbd = datetime.strptime(thoi_bat_dau, '%H:%M').time() if thoi_bat_dau else None
+            tkt = datetime.strptime(thoi_ket_thuc, '%H:%M').time() if thoi_ket_thuc else None
+
+            ca = CaLam(ma_ca_lam=ma_ca_lam, ma_nv=ma_nv, thoi_gian_bat_dau=tbd, thoi_gian_ket_thuc=tkt)
+            db.session.add(ca)
+            db.session.commit()
+            flash('Thêm ca làm cho nhân viên thành công!', 'success')
+            return redirect(url_for('main.quan_ly_ca_lam_nhan_vien', ma_nv=ma_nv))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Lỗi: {str(e)}', 'danger')
+
+    ca_lam = db.session.query(CaLam).filter_by(ma_nv=ma_nv).all()
+    return render_template('nhan_vien/ca_lam.html', nhan_vien=nhan_vien, ca_lam=ca_lam)
+
+
+@bp.route('/ca-lam/<ma_ca_lam>/xoa', methods=['POST'])
+def xoa_ca_lam(ma_ca_lam):
+    ca = db.session.get(CaLam, ma_ca_lam)
+    if not ca:
+        flash('Không tìm thấy ca làm', 'danger')
+        return redirect(url_for('main.danh_sach_nhan_vien'))
+    try:
+        ma_nv = ca.ma_nv
+        db.session.delete(ca)
+        db.session.commit()
+        flash('Xóa ca làm thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi: {str(e)}', 'danger')
+    return redirect(url_for('main.quan_ly_ca_lam_nhan_vien', ma_nv=ma_nv))
+
 @bp.route('/nhan-vien/them', methods=['GET', 'POST'])
 def them_nhan_vien():
     """Thêm nhân viên mới"""

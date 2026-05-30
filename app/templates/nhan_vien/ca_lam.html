@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Ca làm - {{ nhan_vien.ho_ten }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-clock"></i> Ca làm của nhân viên: {{ nhan_vien.ho_ten }} ({{ nhan_vien.ma_nv }})</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST" class="form-inline mb-3">
+        <div class="form-group mr-2">
+            <label for="ma_ca_lam" class="mr-1">Mã ca</label>
+            <input type="text" id="ma_ca_lam" name="ma_ca_lam" class="form-control" placeholder="CA001"> 
+        </div>
+        <div class="form-group mr-2">
+            <label for="thoi_gian_bat_dau" class="mr-1">Bắt đầu</label>
+            <input type="time" id="thoi_gian_bat_dau" name="thoi_gian_bat_dau" class="form-control">
+        </div>
+        <div class="form-group mr-2">
+            <label for="thoi_gian_ket_thuc" class="mr-1">Kết thúc</label>
+            <input type="time" id="thoi_gian_ket_thuc" name="thoi_gian_ket_thuc" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Thêm ca</button>
+    </form>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Mã ca</th>
+                <th>Nhân viên</th>
+                <th>Bắt đầu</th>
+                <th>Kết thúc</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ca in ca_lam %}
+            <tr>
+                <td>{{ ca.ma_ca_lam }}</td>
+                <td>{{ nhan_vien.ho_ten }}</td>
+                <td>{{ ca.thoi_gian_bat_dau.strftime('%H:%M') if ca.thoi_gian_bat_dau else 'N/A' }}</td>
+                <td>{{ ca.thoi_gian_ket_thuc.strftime('%H:%M') if ca.thoi_gian_ket_thuc else 'N/A' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('main.xoa_ca_lam', ma_ca_lam=ca.ma_ca_lam) }}" style="display:inline-block" onsubmit="return confirm('Xóa ca làm?');">
+                        <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">Chưa có ca làm nào</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
